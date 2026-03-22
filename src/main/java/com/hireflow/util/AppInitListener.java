@@ -9,8 +9,12 @@ public class AppInitListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        System.out.println("HireFlow starting — initializing DB pool...");
+        System.out.println("HireFlow starting - initializing DB pool...");
+
+        // Try XML path first, fall back to null (forces env var usage)
         String xmlPath = sce.getServletContext().getRealPath("/WEB-INF/db-config.xml");
+        System.out.println("DB config path: " + xmlPath);
+
         DBConnection.init(xmlPath);
         System.out.println("HireFlow DB pool ready.");
     }
