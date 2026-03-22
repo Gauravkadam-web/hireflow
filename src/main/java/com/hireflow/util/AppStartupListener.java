@@ -16,38 +16,25 @@ public class AppStartupListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        System.out.println("HireFlow starting up...");
+        System.out.println("HireFlow scheduler starting...");
 
-        JobDAO jobDAO = new JobDAO();
-
-        // Run immediately on startup
-        try {
-            int expired = jobDAO.expireOldJobs();
-            System.out.println(
-                    "Auto-expiry: " + expired + " job(s) expired on startup.");
-        } catch (Exception e) {
-            System.err.println("Auto-expiry startup error: " + e.getMessage());
-        }
-
-        // Then run every 24 hours
+        // Run immediately on startup (DB pool already initialized by AppInitListener)
         scheduler = Executors.newSingleThreadScheduledExecutor();
+
         scheduler.scheduleAtFixedRate(() -> {
             try {
+                JobDAO jobDAO = new JobDAO();
                 int expired = jobDAO.expireOldJobs();
-                System.out.println(
-                        "Auto-expiry: " + expired + " job(s) expired.");
+                System.out.println("Auto-expiry: " + expired + " job(s) expired.");
             } catch (Exception e) {
-                System.err.println(
-                        "Auto-expiry scheduled error: " + e.getMessage());
+                System.err.println("Auto-expiry error: " + e.getMessage());
             }
-        }, 24, 24, TimeUnit.HOURS);
+        }, 0, 24, TimeUnit.HOURS);
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        if (scheduler != null) {
-            scheduler.shutdownNow();
-        }
+        if (scheduler != null) scheduler.shutdownNow();
         System.out.println("HireFlow shut down cleanly.");
     }
 }
