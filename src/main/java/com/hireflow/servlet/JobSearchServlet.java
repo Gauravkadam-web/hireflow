@@ -14,41 +14,38 @@ import java.util.List;
 @WebServlet("/jobs")
 public class JobSearchServlet extends HttpServlet {
 
-    private final JobDAO      jobDAO      = new JobDAO();
-    private final CategoryDAO categoryDAO = new CategoryDAO();
+    private JobDAO      jobDAO;
+    private CategoryDAO categoryDAO;
 
     private static final int PAGE_SIZE = 10;
 
     @Override
-    protected void doGet(HttpServletRequest req,
-                         HttpServletResponse res)
+    public void init() {
+        jobDAO      = new JobDAO();
+        categoryDAO = new CategoryDAO();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
 
-        // Read search parameters
-        String keyword    = req.getParameter("keyword");
-        String location   = req.getParameter("location");
-        String catParam   = req.getParameter("category");
-        String pageParam  = req.getParameter("page");
+        String keyword   = req.getParameter("keyword");
+        String location  = req.getParameter("location");
+        String catParam  = req.getParameter("category");
+        String pageParam = req.getParameter("page");
 
         int categoryId = 0;
-        try { categoryId = Integer.parseInt(catParam); }
-        catch (Exception ignored) {}
+        try { categoryId = Integer.parseInt(catParam); } catch (Exception ignored) {}
 
         int page = 1;
-        try { page = Integer.parseInt(pageParam); }
-        catch (Exception ignored) {}
+        try { page = Integer.parseInt(pageParam); } catch (Exception ignored) {}
         if (page < 1) page = 1;
 
         try {
-            // Search jobs
-            List jobs = jobDAO.searchJobs(
-                    keyword, location, categoryId,
-                    page, PAGE_SIZE);
+            List jobs = jobDAO.searchJobs(keyword, location, categoryId, page, PAGE_SIZE);
 
-            // Load categories for filter sidebar
             req.setAttribute("jobs",       jobs);
-            req.setAttribute("categories",
-                    categoryDAO.getAll());
+            req.setAttribute("categories", categoryDAO.getAll());
             req.setAttribute("keyword",    keyword);
             req.setAttribute("location",   location);
             req.setAttribute("categoryId", categoryId);
@@ -57,11 +54,9 @@ public class JobSearchServlet extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            req.setAttribute("error",
-                    "Search failed: " + e.getMessage());
+            req.setAttribute("error", "Search failed: " + e.getMessage());
         }
 
-        req.getRequestDispatcher(
-                "/WEB-INF/views/jobList.jsp").forward(req, res);
+        req.getRequestDispatcher("/WEB-INF/views/jobList.jsp").forward(req, res);
     }
 }

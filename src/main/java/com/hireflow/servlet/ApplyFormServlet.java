@@ -14,17 +14,19 @@ import java.io.IOException;
 @WebServlet("/apply/form")
 public class ApplyFormServlet extends HttpServlet {
 
-    private final JobDAO jobDAO = new JobDAO();
+    private JobDAO jobDAO;
 
     @Override
-    protected void doGet(HttpServletRequest req,
-                         HttpServletResponse res)
+    public void init() {
+        jobDAO = new JobDAO();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
 
-        // Must be logged in as seeker
         HttpSession session = req.getSession(false);
-        if (session == null ||
-                session.getAttribute("userId") == null) {
+        if (session == null || session.getAttribute("userId") == null) {
             res.sendRedirect(req.getContextPath() + "/login");
             return;
         }
@@ -46,29 +48,25 @@ public class ApplyFormServlet extends HttpServlet {
             Job job   = jobDAO.getJobById(jobId);
 
             if (job == null) {
-                res.sendError(HttpServletResponse.SC_NOT_FOUND,
-                        "Job not found.");
+                res.sendError(HttpServletResponse.SC_NOT_FOUND, "Job not found.");
                 return;
             }
 
-            // Compute company initial for avatar
-            String companyName   = job.getCompanyName();
-            String jobInitial    = (companyName != null && !companyName.isEmpty())
+            String companyName = job.getCompanyName();
+            String jobInitial  = (companyName != null && !companyName.isEmpty())
                     ? String.valueOf(companyName.charAt(0)).toUpperCase() : "?";
 
             req.setAttribute("job",        job);
             req.setAttribute("jobInitial", jobInitial);
             req.setAttribute("error",      req.getParameter("error"));
 
-            req.getRequestDispatcher(
-                    "/WEB-INF/views/applyForm.jsp").forward(req, res);
+            req.getRequestDispatcher("/WEB-INF/views/applyForm.jsp").forward(req, res);
 
         } catch (NumberFormatException e) {
             res.sendRedirect(req.getContextPath() + "/jobs");
         } catch (Exception e) {
             e.printStackTrace();
-            res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    e.getMessage());
+            res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 }

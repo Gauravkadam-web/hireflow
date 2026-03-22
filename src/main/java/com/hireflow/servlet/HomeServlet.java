@@ -14,29 +14,14 @@ import java.io.IOException;
 @WebServlet("/home")
 public class HomeServlet extends HttpServlet {
 
-    private final JobDAO      jobDAO      = new JobDAO();
-    private final CategoryDAO categoryDAO = new CategoryDAO();
+    private JobDAO      jobDAO;
+    private CategoryDAO categoryDAO;
 
-//    @Override
-//    protected void doGet(HttpServletRequest req,
-//                         HttpServletResponse res)
-//            throws ServletException, IOException {
-//        try {
-//            // Load data for homepage
-//            req.setAttribute("categories",
-//                    categoryDAO.getAll());
-//            req.setAttribute("featuredJobs",
-//                    jobDAO.getFeaturedJobs(4));
-//            req.setAttribute("totalJobs",
-//                    jobDAO.countActiveJobs());
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        req.getRequestDispatcher(
-//                "/WEB-INF/views/index.jsp").forward(req, res);
-//    }
+    @Override
+    public void init() {
+        jobDAO      = new JobDAO();
+        categoryDAO = new CategoryDAO();
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res)
@@ -55,7 +40,6 @@ public class HomeServlet extends HttpServlet {
             }
 
         } catch (Exception e) {
-            // TEMPORARY: surface the real error so you can see it
             throw new ServletException("HomeServlet data load failed: " + e.getMessage(), e);
         }
 

@@ -13,11 +13,15 @@ import java.io.IOException;
 @WebServlet("/jobs/delete")
 public class JobDeleteServlet extends HttpServlet {
 
-    private final JobDAO jobDAO = new JobDAO();
+    private JobDAO jobDAO;
 
     @Override
-    protected void doPost(HttpServletRequest req,
-                          HttpServletResponse res)
+    public void init() {
+        jobDAO = new JobDAO();
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
 
         HttpSession session = req.getSession(false);
@@ -32,7 +36,7 @@ public class JobDeleteServlet extends HttpServlet {
             return;
         }
 
-        int employerId = (int) session.getAttribute("userId");
+        int employerId  = (int) session.getAttribute("userId");
         String jobIdStr = req.getParameter("jobId");
         String redirect = req.getContextPath() + "/dashboard/employer";
 
@@ -42,15 +46,13 @@ public class JobDeleteServlet extends HttpServlet {
         }
 
         try {
-            int jobId = Integer.parseInt(jobIdStr);
+            int jobId       = Integer.parseInt(jobIdStr);
             boolean deleted = jobDAO.deleteJob(jobId, employerId);
 
             if (deleted) {
-                res.sendRedirect(redirect +
-                        "?success=Job+deleted+successfully.");
+                res.sendRedirect(redirect + "?success=Job+deleted+successfully.");
             } else {
-                res.sendRedirect(redirect +
-                        "?error=Could+not+delete+job.+It+may+not+exist+or+belong+to+you.");
+                res.sendRedirect(redirect + "?error=Could+not+delete+job.+It+may+not+exist+or+belong+to+you.");
             }
 
         } catch (Exception e) {

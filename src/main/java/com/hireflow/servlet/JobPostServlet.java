@@ -18,13 +18,17 @@ import java.util.List;
 @WebServlet("/jobs/create")
 public class JobPostServlet extends HttpServlet {
 
-    private final JobDAO      jobDAO      = new JobDAO();
-    private final CategoryDAO categoryDAO = new CategoryDAO();
+    private JobDAO      jobDAO;
+    private CategoryDAO categoryDAO;
 
-    // ── GET → show post job form ──────────────────────
     @Override
-    protected void doGet(HttpServletRequest req,
-                         HttpServletResponse res)
+    public void init() {
+        jobDAO      = new JobDAO();
+        categoryDAO = new CategoryDAO();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
 
         HttpSession session = req.getSession(false);
@@ -40,20 +44,16 @@ public class JobPostServlet extends HttpServlet {
         }
 
         try {
-            List<Category> categories = categoryDAO.getAll();
-            req.setAttribute("categories", categories);
+            req.setAttribute("categories", categoryDAO.getAll());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        req.getRequestDispatcher(
-                "/WEB-INF/views/postJob.jsp").forward(req, res);
+        req.getRequestDispatcher("/WEB-INF/views/postJob.jsp").forward(req, res);
     }
 
-    // ── POST → create job ─────────────────────────────
     @Override
-    protected void doPost(HttpServletRequest req,
-                          HttpServletResponse res)
+    protected void doPost(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
 
         req.setCharacterEncoding("UTF-8");
@@ -70,9 +70,7 @@ public class JobPostServlet extends HttpServlet {
             return;
         }
 
-        int employerId = (int) session.getAttribute("userId");
-
-        // Read form fields
+        int employerId  = (int) session.getAttribute("userId");
         String title       = req.getParameter("title");
         String description = req.getParameter("description");
         String location    = req.getParameter("location");
@@ -81,19 +79,13 @@ public class JobPostServlet extends HttpServlet {
         String salaryMinStr = req.getParameter("salaryMin");
         String salaryMaxStr = req.getParameter("salaryMax");
 
-        // Validate required fields
         if (title == null || title.trim().isEmpty() ||
                 description == null || description.trim().isEmpty() ||
                 location == null || location.trim().isEmpty()) {
-            try {
-                List<Category> categories = categoryDAO.getAll();
-                req.setAttribute("categories", categories);
-            } catch (Exception ex) { ex.printStackTrace(); }
-
+            try { req.setAttribute("categories", categoryDAO.getAll()); } catch (Exception ex) { ex.printStackTrace(); }
             req.setAttribute("error", "Title, description and location are required.");
             req.setAttribute("formData", req.getParameterMap());
-            req.getRequestDispatcher(
-                    "/WEB-INF/views/postJob.jsp").forward(req, res);
+            req.getRequestDispatcher("/WEB-INF/views/postJob.jsp").forward(req, res);
             return;
         }
 
@@ -105,32 +97,24 @@ public class JobPostServlet extends HttpServlet {
             job.setLocation(location.trim());
             job.setJobType(jobType != null ? jobType : "Full-time");
 
-            if (categoryStr != null && !categoryStr.isEmpty()) {
+            if (categoryStr != null && !categoryStr.isEmpty())
                 job.setCategoryId(Integer.parseInt(categoryStr));
-            }
-
-            if (salaryMinStr != null && !salaryMinStr.trim().isEmpty()) {
+            if (salaryMinStr != null && !salaryMinStr.trim().isEmpty())
                 job.setSalaryMin(new BigDecimal(salaryMinStr.trim()));
-            }
-            if (salaryMaxStr != null && !salaryMaxStr.trim().isEmpty()) {
+            if (salaryMaxStr != null && !salaryMaxStr.trim().isEmpty())
                 job.setSalaryMax(new BigDecimal(salaryMaxStr.trim()));
-            }
 
             boolean inserted = jobDAO.insertJob(job);
 
             if (inserted) {
-                res.sendRedirect(req.getContextPath() +
-                        "/dashboard/employer?success=Job+posted+successfully!+It+will+be+reviewed+shortly.");
+                res.sendRedirect(req.getContextPath() + "/dashboard/employer?success=Job+posted+successfully!+It+will+be+reviewed+shortly.");
             } else {
-                res.sendRedirect(req.getContextPath() +
-                        "/dashboard/employer?error=Failed+to+post+job.+Please+try+again.");
+                res.sendRedirect(req.getContextPath() + "/dashboard/employer?error=Failed+to+post+job.+Please+try+again.");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            res.sendRedirect(req.getContextPath() +
-                    "/dashboard/employer?error=Something+went+wrong:+" +
-                    e.getMessage().replace(" ", "+"));
+            res.sendRedirect(req.getContextPath() + "/dashboard/employer?error=Something+went+wrong:+" + e.getMessage().replace(" ", "+"));
         }
     }
 }

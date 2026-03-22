@@ -19,19 +19,22 @@ import java.util.Map;
 @WebServlet("/dashboard/employer")
 public class EmployerDashServlet extends HttpServlet {
 
-    private final JobDAO         jobDAO         = new JobDAO();
-    private final ApplicationDAO applicationDAO = new ApplicationDAO();
+    private JobDAO         jobDAO;
+    private ApplicationDAO applicationDAO;
 
     @Override
-    protected void doGet(HttpServletRequest req,
-                         HttpServletResponse res)
+    public void init() {
+        jobDAO         = new JobDAO();
+        applicationDAO = new ApplicationDAO();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
 
         HttpSession session = req.getSession(false);
 
-        // Guard: must be logged in as employer
-        if (session == null ||
-                session.getAttribute("userId") == null) {
+        if (session == null || session.getAttribute("userId") == null) {
             res.sendRedirect(req.getContextPath() + "/login");
             return;
         }
@@ -45,29 +48,22 @@ public class EmployerDashServlet extends HttpServlet {
         int employerId = (int) session.getAttribute("userId");
 
         try {
-            // Fetch all jobs by this employer
             List<Job> jobs = jobDAO.getJobsByEmployer(employerId);
 
-            // Fetch applicants for each job — map jobId → list
-            Map<Integer, List<Application>> applicantsMap =
-                    new LinkedHashMap<>();
+            Map<Integer, List<Application>> applicantsMap = new LinkedHashMap<>();
             int totalApplicants = 0;
             int totalActive     = 0;
             int totalHired      = 0;
 
             for (Job job : jobs) {
-                List<Application> apps =
-                        applicationDAO.getByJob(job.getJobId());
+                List<Application> apps = applicationDAO.getByJob(job.getJobId());
                 applicantsMap.put(job.getJobId(), apps);
                 totalApplicants += apps.size();
                 if ("active".equals(job.getStatus())) totalActive++;
-                totalHired += apps.stream()
-                        .filter(a -> "hired".equals(a.getStatus()))
-                        .count();
+                totalHired += apps.stream().filter(a -> "hired".equals(a.getStatus())).count();
             }
 
-            // Compute employer initial for avatar
-            String userName      = (String) session.getAttribute("userName");
+            String userName       = (String) session.getAttribute("userName");
             String employerInitial = (userName != null && !userName.isEmpty())
                     ? String.valueOf(userName.charAt(0)).toUpperCase() : "?";
 
@@ -83,12 +79,9 @@ public class EmployerDashServlet extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            req.setAttribute("error",
-                    "Could not load dashboard: " + e.getMessage());
+            req.setAttribute("error", "Could not load dashboard: " + e.getMessage());
         }
 
-        req.getRequestDispatcher(
-                        "/WEB-INF/views/employerDashboard.jsp")
-                .forward(req, res);
+        req.getRequestDispatcher("/WEB-INF/views/employerDashboard.jsp").forward(req, res);
     }
 }

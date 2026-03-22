@@ -1,5 +1,6 @@
 package com.hireflow.servlet;
 
+import com.hireflow.dao.ApplicationDAO;
 import com.hireflow.dao.JobDAO;
 import com.hireflow.model.Job;
 import jakarta.servlet.ServletException;
@@ -15,11 +16,17 @@ import java.util.Arrays;
 @WebServlet("/jobs/detail")
 public class JobDetailServlet extends HttpServlet {
 
-    private final JobDAO jobDAO = new JobDAO();
+    private JobDAO         jobDAO;
+    private ApplicationDAO applicationDAO;
 
     @Override
-    protected void doGet(HttpServletRequest req,
-                         HttpServletResponse res)
+    public void init() {
+        jobDAO         = new JobDAO();
+        applicationDAO = new ApplicationDAO();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
 
         String idParam = req.getParameter("id");
@@ -38,20 +45,16 @@ public class JobDetailServlet extends HttpServlet {
                 return;
             }
 
-            // Check if current user already applied
-            HttpSession session = req.getSession(false);
-            boolean alreadyApplied = false;
-            boolean isSeeker = false;
+            HttpSession session      = req.getSession(false);
+            boolean alreadyApplied  = false;
+            boolean isSeeker        = false;
 
             if (session != null && session.getAttribute("userId") != null) {
                 String role = (String) session.getAttribute("userRole");
                 isSeeker = "seeker".equals(role);
-
                 if (isSeeker) {
-                    com.hireflow.dao.ApplicationDAO appDAO =
-                            new com.hireflow.dao.ApplicationDAO();
                     int seekerId = (int) session.getAttribute("userId");
-                    alreadyApplied = appDAO.hasApplied(seekerId, jobId);
+                    alreadyApplied = applicationDAO.hasApplied(seekerId, jobId);
                 }
             }
 
@@ -59,20 +62,15 @@ public class JobDetailServlet extends HttpServlet {
             req.setAttribute("alreadyApplied", alreadyApplied);
             req.setAttribute("isSeeker",       isSeeker);
 
-            // ── Skills: convert String[] → List so JSTL c:forEach works ──
-            // JSTL cannot reliably iterate raw Java arrays (String[]).
-            // Converting to List<String> fixes the 500 error on line 202.
             if (job.getSkills() != null && job.getSkills().length > 0) {
                 req.setAttribute("jobSkills", Arrays.asList(job.getSkills()));
             }
 
-            // Company initial for avatar display
             String companyName = job.getCompanyName();
             String jobInitial  = (companyName != null && !companyName.isEmpty())
                     ? String.valueOf(companyName.charAt(0)).toUpperCase() : "?";
             req.setAttribute("jobInitial", jobInitial);
 
-            // User initials for nav avatar
             if (session != null && session.getAttribute("userId") != null) {
                 String name = (String) session.getAttribute("userName");
                 req.setAttribute("userInitials", buildInitials(name));
@@ -80,27 +78,19 @@ public class JobDetailServlet extends HttpServlet {
                 req.setAttribute("userInitials", "");
             }
 
-            // Convert LocalDateTime → formatted string already handled by Job.getPostedAtFormatted()
-            // Convert for fmt:formatDate if needed (kept for compatibility)
             if (job.getPostedAt() != null) {
                 req.setAttribute("postedAtDate",
-                        java.util.Date.from(job.getPostedAt()
-                                .atZone(java.time.ZoneId.systemDefault())
-                                .toInstant()));
+                        java.util.Date.from(job.getPostedAt().atZone(java.time.ZoneId.systemDefault()).toInstant()));
             }
             if (job.getExpiresAt() != null) {
                 req.setAttribute("expiresAtDate",
-                        java.util.Date.from(job.getExpiresAt()
-                                .atZone(java.time.ZoneId.systemDefault())
-                                .toInstant()));
+                        java.util.Date.from(job.getExpiresAt().atZone(java.time.ZoneId.systemDefault()).toInstant()));
             }
 
-            // Success / error messages from ApplyServlet redirect
             req.setAttribute("success", req.getParameter("success"));
             req.setAttribute("error",   req.getParameter("error"));
 
-            req.getRequestDispatcher(
-                    "/WEB-INF/views/jobDetail.jsp").forward(req, res);
+            req.getRequestDispatcher("/WEB-INF/views/jobDetail.jsp").forward(req, res);
 
         } catch (NumberFormatException e) {
             res.sendRedirect(req.getContextPath() + "/jobs");
