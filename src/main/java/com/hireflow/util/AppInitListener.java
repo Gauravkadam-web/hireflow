@@ -9,18 +9,21 @@ public class AppInitListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        System.out.println("HireFlow starting - initializing DB pool...");
-
-        // Try XML path first, fall back to null (forces env var usage)
-        String xmlPath = sce.getServletContext().getRealPath("/WEB-INF/db-config.xml");
-        System.out.println("DB config path: " + xmlPath);
-
-        DBConnection.init(xmlPath);
-        System.out.println("HireFlow DB pool ready.");
+        try {
+            System.out.println("=== HireFlow starting ===");
+            String xmlPath = sce.getServletContext().getRealPath("/WEB-INF/db-config.xml");
+            System.out.println("=== XML path: " + xmlPath);
+            System.out.println("=== DATABASE_URL set: " + (System.getenv("DATABASE_URL") != null));
+            DBConnection.init(xmlPath);
+            System.out.println("=== HireFlow DB pool ready ===");
+        } catch (Throwable t) {
+            System.err.println("=== HireFlow STARTUP FAILED: " + t.getMessage());
+            t.printStackTrace();
+        }
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        System.out.println("HireFlow shutting down.");
+        System.out.println("=== HireFlow shutting down ===");
     }
 }
