@@ -1,6 +1,5 @@
 package com.hireflow.util;
 
-import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
@@ -10,13 +9,10 @@ public class AppInitListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        ServletContext ctx = sce.getServletContext();
-
-        // Load XML config from WEB-INF at runtime
-        String path = ctx.getRealPath("/WEB-INF/db-config.xml");
-
-        System.out.println("Loading config from: " + path);
-        DBConnection.init(path);
+        System.out.println("HireFlow starting — initializing DB pool...");
+        String xmlPath = sce.getServletContext().getRealPath("/WEB-INF/db-config.xml");
+        DBConnection.init(xmlPath);
+        System.out.println("HireFlow DB pool ready.");
     }
 
     @Override
