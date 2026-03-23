@@ -86,7 +86,7 @@
     </dependencies>
 
     <build>
-        <finalName>ROOT</finalName>
+        <finalName>hireflow</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
