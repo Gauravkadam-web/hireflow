@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Set;
 
-@WebFilter("/*")
+@WebFilter("/")
 public class AuthFilter implements Filter {
 
     // These URLs are accessible WITHOUT login
