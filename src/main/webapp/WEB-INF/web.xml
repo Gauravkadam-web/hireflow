@@ -3,12 +3,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
          https://jakarta.ee/xml/ns/jakartaee/web-app_6_1.xsd"
-         version="6.1">
+         version="6.1"
+         metadata-complete="false">
 
     <display-name>HireFlow Job Portal</display-name>
 
     <welcome-file-list>
-        <welcome-file>home</welcome-file>
+        <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
 
     <session-config>
